@@ -1,16 +1,24 @@
 import React, { useReducer, useState } from "react";
 import "./toDo.css";
 
-function tasksReducer(state, action) {
-  console.log(action);
-  console.log(state);
-  switch (action.type) {
+function tasksReducer(state, { type, payload }) {
+  switch (type) {
     case "addTask": {
-      // return state + action.payload.step;
-      // }
-      // case "decrement": {
-      //   return state - action.payload.step;
-      console.log(state);
+      // console.log(action.payload);
+      return [...state, { id: Date.now(), text: payload, completed: true }];
+    }
+    case "deleteTask": {
+      // console.log(action.payload);
+      console.log(payload);
+      return state.filter((task) => task.id !== payload);
+    }
+    case "setTaskToEdit": {
+      // console.log(action.payload);
+      console.log(payload);
+      const toggle = state.map((todo) =>
+        todo.id === payload.id ? { ...todo, completed: !todo.completed } : todo
+      );
+      return toggle;
     }
     default: {
       return state;
@@ -20,11 +28,11 @@ function tasksReducer(state, action) {
 
 export default function ToDo() {
   // const [state, dispatch] = useReducer(reducer, { count: 0 });
-  const [tasks, dispatch] = useReducer(tasksReducer, []);
+  const [toDo, dispatch] = useReducer(tasksReducer, []);
   const [taskToAdd, setTaskToAdd] = useState("");
 
   console.log(taskToAdd);
-  console.log(tasks);
+  console.log(toDo);
 
   return (
     <div className="container">
@@ -36,30 +44,52 @@ export default function ToDo() {
         />{" "}
         <button
           type="button"
-          onClick={() => dispatch({ type: addTask, payload: taskToAdd })}
+          onClick={() => dispatch({ type: "addTask", payload: taskToAdd })}
         >
           add
         </button>
       </div>
-
-      <div className="task">
-        <input type="checkbox" name="checkbox" id="checkbox" />
-        <p>hahahahah</p>
-        <button type="button">Edit</button>
-        <button type="button">Delete</button>
-      </div>
-      <div className="task">
-        <input type="checkbox" name="checkbox" id="checkbox" />
-        <p>hahahahah</p>
-        <button type="button">Edit</button>
-        <button type="button">Delete</button>
-      </div>
-      <div className="task">
-        <input type="checkbox" name="checkbox" id="checkbox" />
-        <p>hahahahah</p>
-        <button type="button">Edit</button>
-        <button type="button">Delete</button>
-      </div>
+      {toDo.map((td, index) => (
+        <div className="task" key={index}>
+          <input type="checkbox" name="checkbox" id="checkbox" />
+          {td.completed ? (
+            <div>
+              <p>{td.text}</p>
+              <input
+                type="text"
+                onChange={(e) => setTaskToAdd(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div>
+              <input
+                type="text"
+                onChange={(e) => setTaskToAdd(e.target.value)}
+              />{" "}
+              <button
+                type="button"
+                onClick={() =>
+                  dispatch({ type: "addTask", payload: taskToAdd })
+                }
+              >
+                add
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "setTaskToEdit", payload: td })}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "deleteTask", payload: td.id })}
+          >
+            Delete
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
