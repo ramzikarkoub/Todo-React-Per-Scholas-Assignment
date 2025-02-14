@@ -4,35 +4,43 @@ import "./toDo.css";
 function tasksReducer(state, { type, payload }) {
   switch (type) {
     case "addTask": {
-      // console.log(action.payload);
-      return [...state, { id: Date.now(), text: payload, completed: true }];
+      return [{ id: Date.now(), text: payload, completed: false }, ...state];
     }
     case "deleteTask": {
-      // console.log(action.payload);
-      console.log(payload);
       return state.filter((task) => task.id !== payload);
     }
     case "setTaskToEdit": {
-      // console.log(action.payload);
-      console.log(payload);
-      const toggle = state.map((todo) =>
+      return state.map((todo) =>
+        todo.id === payload.id
+          ? { ...todo, editing: true }
+          : { ...todo, editing: false }
+      );
+    }
+    case "saveTask": {
+      return state.map((todo) =>
+        todo.id === payload.id
+          ? { ...todo, text: payload.newText, editing: false }
+          : todo
+      );
+    }
+    case "toggleTaskCompletion": {
+      return state.map((todo) =>
         todo.id === payload.id ? { ...todo, completed: !todo.completed } : todo
       );
-      return toggle;
     }
-    default: {
+    default:
       return state;
-    }
   }
 }
 
 export default function ToDo() {
-  // const [state, dispatch] = useReducer(reducer, { count: 0 });
   const [toDo, dispatch] = useReducer(tasksReducer, []);
   const [taskToAdd, setTaskToAdd] = useState("");
+  const [editedTaskText, setEditedTaskText] = useState("");
 
-  console.log(taskToAdd);
-  console.log(toDo);
+  const handleSave = (id, newText) => {
+    dispatch({ type: "saveTask", payload: { id, newText } });
+  };
 
   return (
     <div className="container">
@@ -40,51 +48,63 @@ export default function ToDo() {
         <h2>Create Todo List</h2>
         <input
           type="text"
+          value={taskToAdd}
           onChange={(e) => setTaskToAdd(e.target.value)}
-        />{" "}
+        />
         <button
           type="button"
-          onClick={() => dispatch({ type: "addTask", payload: taskToAdd })}
+          onClick={() => {
+            if (taskToAdd) {
+              dispatch({ type: "addTask", payload: taskToAdd });
+              setTaskToAdd("");
+            }
+          }}
         >
-          add
+          Add Task
         </button>
       </div>
-      {toDo.map((td, index) => (
-        <div className="task" key={index}>
-          <input type="checkbox" name="checkbox" id="checkbox" />
-          {td.completed ? (
+
+      {toDo.map((td) => (
+        <div className="task" key={td.id}>
+          <input
+            type="checkbox"
+            checked={td.completed}
+            onChange={() =>
+              dispatch({ type: "toggleTaskCompletion", payload: td })
+            }
+          />
+          {td.editing ? (
             <div>
-              <p>{td.text}</p>
               <input
                 type="text"
-                onChange={(e) => setTaskToAdd(e.target.value)}
+                value={editedTaskText || td.text}
+                onChange={(e) => setEditedTaskText(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => handleSave(td.id, editedTaskText)}
+              >
+                Save
+              </button>
             </div>
           ) : (
             <div>
-              <input
-                type="text"
-                onChange={(e) => setTaskToAdd(e.target.value)}
-              />{" "}
-              <button
-                type="button"
-                onClick={() =>
-                  dispatch({ type: "addTask", payload: taskToAdd })
-                }
-              >
-                add
-              </button>
+              <p>{td.text}</p>
             </div>
           )}
+
           <button
             type="button"
             onClick={() => dispatch({ type: "setTaskToEdit", payload: td })}
+            disabled={td.completed || td.editing}
           >
             Edit
           </button>
+
           <button
             type="button"
             onClick={() => dispatch({ type: "deleteTask", payload: td.id })}
+            disabled={!td.completed}
           >
             Delete
           </button>

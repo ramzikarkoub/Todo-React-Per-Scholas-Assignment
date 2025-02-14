@@ -1,13 +1,8 @@
 .task {
   display: flex;
-  gap: 10px;
+  gap: 20px;
 }
 
 button {
   height: 30px;
-}
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
